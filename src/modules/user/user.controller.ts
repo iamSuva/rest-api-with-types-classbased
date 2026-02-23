@@ -3,7 +3,7 @@ import { UserService } from "./user.service";
 import { registerSchema, loginSchema, updateUserSchema  } from "./user.schema";
 import { ApiResponse } from "../../common/utils/response";
 import { AuthRequest } from "../../common/middlewares/auth.middleware";
-
+import { redisClient } from "../../config/redis";
 export class UserController {
 
   private userService = new UserService();
@@ -12,7 +12,19 @@ export class UserController {
     try {
       const page = Number(req.query.page) || 1;
       const limit = Number(req.query.limit) || 10;
+      // using redis cache to fetch users
+      const cacheKey = `users:page:${page}:limit:${limit}`;
+      const cachedData = await redisClient.get(cacheKey);
+      if (cachedData) {
+        console.log("Users fetched successfully from cache");
+        return ApiResponse.success(res, JSON.parse(cachedData), "Users fetched successfully from cache", 200);
+      }
+      // if not found in cache, fetch from database
       const result = await this.userService.getAllUsers(page, limit);
+      console.log("********** Users fetched successfully from database **********");
+      // set cache
+      await redisClient.setEx(cacheKey, 120, JSON.stringify(result));
+      console.log("********** Cache set successfully **********");
       return ApiResponse.success(res, result, "Users fetched successfully", 200);
     } catch (error) {
       next(error);

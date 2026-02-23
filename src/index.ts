@@ -2,19 +2,29 @@ import "reflect-metadata";
 import { App } from "./app";
 import { AppDataSource } from "./database/data-source";
 import dotenv from "dotenv";
-
+import { connectRedis } from "./config/redis";
 dotenv.config();
 
 const PORT = process.env.PORT || 5000;
 
-AppDataSource.initialize()
-  .then(() => {
+const startServer = async () => {
+  try {
+    await AppDataSource.initialize();
     console.log("********** Database connected **********");
+
+    await connectRedis();
+    console.log("********** Redis connected **********");
+
     const appInstance = new App();
+
     appInstance.app.listen(PORT, () => {
       console.log(`********** Server running on port ${PORT} **********`);
     });
-  })
-  .catch((err) => {
-    console.error("********** Database connection failed **********", err);
-  });
+
+  } catch (err) {
+    console.error("********** Startup failed **********", err);
+    process.exit(1);
+  }
+};
+
+startServer();
