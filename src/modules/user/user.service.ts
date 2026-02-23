@@ -14,13 +14,24 @@ export class UserService {
     this.userRepository = AppDataSource.getRepository(User);
   }
 
-   async getAllUsers(): Promise<IRegisterResponse[]> {
-    const users = await this.userRepository.find();
-    return users.map((user) => ({
-      id: user.id,
-      email: user.email,
-      createdAt: user.createdAt,
-    })) as IRegisterResponse[];
+  async getAllUsers(page: number, limit: number): Promise<{ users: IRegisterResponse[], 
+    metadata: { total: number, page: number, limit: number, totalPages: number } }> {
+    const [users, total] = await this.userRepository.findAndCount({
+      skip: (page - 1) * limit,
+      take: limit,
+      order: {
+        createdAt: "DESC",
+      },
+    });
+    const totalPages = Math.ceil(total / limit);
+    return {
+      users: users.map((user) => ({
+        id: user.id,
+        email: user.email,
+        createdAt: user.createdAt,
+      })) as IRegisterResponse[],
+      metadata: { total: total, page: page, limit: limit, totalPages: totalPages },
+    };
   }
   async register(data: IRegister): Promise<IRegisterResponse> {
     const existingUser = await this.userRepository.findOne({
