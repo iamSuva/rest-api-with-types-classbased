@@ -5,7 +5,7 @@ import bcrypt from "bcrypt";
 import { IRegister, ILogin ,IRegisterResponse,ILoginResponse, IUpdateUser, IUpdateUserResponse} from "./user.types";
 import { AppError } from "../../common/errors/AppError";
 import { JwtUtil } from "../../common/utils/jwt";
-
+import { IPaginatedResponse } from "../../interface/pagination";
 export class UserService {
 
   private userRepository: Repository<User>;
@@ -14,8 +14,7 @@ export class UserService {
     this.userRepository = AppDataSource.getRepository(User);
   }
 
-  async getAllUsers(page: number, limit: number): Promise<{ users: IRegisterResponse[], 
-    metadata: { total: number, page: number, limit: number, totalPages: number } }> {
+  async getAllUsers(page: number, limit: number): Promise<IPaginatedResponse<IRegisterResponse>> {
     const [users, total] = await this.userRepository.findAndCount({
       skip: (page - 1) * limit,
       take: limit,
@@ -25,12 +24,12 @@ export class UserService {
     });
     const totalPages = Math.ceil(total / limit);
     return {
-      users: users.map((user) => ({
+      data: users.map((user) => ({
         id: user.id,
         email: user.email,
         createdAt: user.createdAt,
       })) as IRegisterResponse[],
-      metadata: { total: total, page: page, limit: limit, totalPages: totalPages },
+      meta: { total: total, page: page, limit: limit, totalPages: totalPages },
     };
   }
   async register(data: IRegister): Promise<IRegisterResponse> {
