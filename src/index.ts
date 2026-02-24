@@ -3,6 +3,7 @@ import { App } from "./app";
 import { AppDataSource } from "./database/data-source";
 import dotenv from "dotenv";
 import { connectRedis } from "./config/redis";
+import { EmailWorker } from "./workers/email.worker";
 dotenv.config();
 
 const PORT = process.env.PORT || 5000;
@@ -14,6 +15,9 @@ const startServer = async () => {
 
     await connectRedis();
     console.log("********** Redis connected **********");
+
+    const emailWorker = new EmailWorker();
+    console.log("********** Email worker started **********");
 
     const appInstance = new App();
 

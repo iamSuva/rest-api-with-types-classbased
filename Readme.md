@@ -43,3 +43,28 @@ Node process ❌ (cleared)
 Redis server ✅ (still running)
 Redis runs as a separate service (Docker container or system service).
 
+
+// Email Notification Queue: 
+User registers
+   ↓
+User saved in DB
+   ↓
+Add job to Redis queue
+   ↓
+API responds immediately
+   ↓
+Worker sends welcome email in background
+
+npm install bullmq nodemailer
+
+npm i -D @types/nodemailer
+
+User → API → Queue.add()
+                ↓
+              Redis
+                ↓
+            Worker (listening)
+                ↓
+         processJob()
+                ↓
+         EmailService.send()

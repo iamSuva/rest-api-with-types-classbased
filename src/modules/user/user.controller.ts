@@ -4,6 +4,7 @@ import { registerSchema, loginSchema, updateUserSchema  } from "./user.schema";
 import { ApiResponse } from "../../common/utils/response";
 import { AuthRequest } from "../../common/middlewares/auth.middleware";
 import { redisClient } from "../../config/redis";
+import { emailQueue } from "../../queues/email.queue";
 export class UserController {
 
   private userService = new UserService();
@@ -34,6 +35,10 @@ export class UserController {
     try {
       const validatedData = registerSchema.parse(req.body);
       const result = await this.userService.register(validatedData);
+
+      // add job to email queue
+      await emailQueue.add("welcomeEmail", { email: result.email, name: result.email.split("@")[0] });
+      console.log("********** Job added to email queue **********");
       return ApiResponse.success(res, result, "User registered successfully", 201);
     } catch (error) {
       next(error);
