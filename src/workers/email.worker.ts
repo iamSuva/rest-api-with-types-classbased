@@ -1,6 +1,7 @@
 import { EmailJob } from "../jobs/email.job";
 import { Job, Worker } from "bullmq";
 import { IEmailJob } from "../interface/emailJob";
+import { logger } from "../utils/logger";
 
 export class EmailWorker {
     private emailJob: EmailJob;
@@ -19,11 +20,11 @@ export class EmailWorker {
             }
         );
         this.worker.on("completed", (job) => {
-            console.log(`🎉 Job ${job.id} completed`);
+            logger.info(`Job ${job.id} completed`);
           });
       
         this.worker.on("failed", (job, err) => {
-        console.error(`❌ Job ${job?.id} failed:`, err.message);
+            logger.error(`Job ${job?.id} failed: \n ${err.message}`);
         });
     }
     private async processJob(job: Job<IEmailJob>) {

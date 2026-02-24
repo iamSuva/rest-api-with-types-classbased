@@ -5,6 +5,7 @@ import { ApiResponse } from "../../common/utils/response";
 import { AuthRequest } from "../../common/middlewares/auth.middleware";
 import { redisClient } from "../../config/redis";
 import { emailQueue } from "../../queues/email.queue";
+import { logger } from "../../utils/logger";
 export class UserController {
 
   private userService = new UserService();
@@ -17,15 +18,15 @@ export class UserController {
       const cacheKey = `users:page:${page}:limit:${limit}`;
       const cachedData = await redisClient.get(cacheKey);
       if (cachedData) {
-        console.log("Users fetched successfully from cache");
+        logger.info(`Users fetched successfully from cache, key: ${cacheKey}`);
         return ApiResponse.success(res, JSON.parse(cachedData), "Users fetched successfully from cache", 200);
       }
       // if not found in cache, fetch from database
       const result = await this.userService.getAllUsers(page, limit);
-      console.log("********** Users fetched successfully from database **********");
+      logger.info("Users fetched successfully from database");
       // set cache
       await redisClient.setEx(cacheKey, 120, JSON.stringify(result));
-      console.log("********** Cache set successfully **********");
+      logger.info("Cache set successfully");
       return ApiResponse.success(res, result, "Users fetched successfully", 200);
     } catch (error) {
       next(error);
@@ -48,7 +49,7 @@ export class UserController {
           },
         }
       );
-      console.log("********** Job added to email queue **********");
+      logger.info("Job added to email queue");
       return ApiResponse.success(res, result, "User registered successfully", 201);
     } catch (error) {
       next(error);
@@ -68,7 +69,7 @@ export class UserController {
   updateUser = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const validatedData = updateUserSchema.parse(req.body);
-      console.log(validatedData);
+      logger.info(`Updating user: ${validatedData}`);
       const userId = (req as AuthRequest).user.id;
       const result = await this.userService.updateUser(validatedData, userId);
       return ApiResponse.success(res, result, "User updated successfully", 200);

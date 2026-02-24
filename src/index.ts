@@ -1,32 +1,33 @@
 import "reflect-metadata";
+import dotenv from "dotenv";
+dotenv.config();
 import { App } from "./app";
 import { AppDataSource } from "./database/data-source";
-import dotenv from "dotenv";
 import { connectRedis } from "./config/redis";
 import { EmailWorker } from "./workers/email.worker";
-dotenv.config();
+import { logger } from "./utils/logger";
 
 const PORT = process.env.PORT || 5000;
 
 const startServer = async () => {
   try {
     await AppDataSource.initialize();
-    console.log("********** Database connected **********");
+    logger.info("********** Database connected **********");
 
     await connectRedis();
-    console.log("********** Redis connected **********");
+    logger.info("********** Redis connected **********");
 
     const emailWorker = new EmailWorker();
-    console.log("********** Email worker started **********");
+    logger.info("********** Email worker started **********");
 
     const appInstance = new App();
 
     appInstance.app.listen(PORT, () => {
-      console.log(`********** Server running on port ${PORT} **********`);
+      logger.info(`********** Server running on port ${PORT} **********`);
     });
 
   } catch (err) {
-    console.error("********** Startup failed **********", err);
+    logger.error(`********** Startup failed **********\n ${err}`);
     process.exit(1);
   }
 };
