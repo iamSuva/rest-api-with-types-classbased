@@ -12,7 +12,7 @@ npm install -D typescript ts-node-dev @types/node @types/express @types/bcrypt @
 npm install -D tsx
 
 
-// redis  
+## redis  
 npm install redis
 
 docker-compose.yml: 
@@ -44,7 +44,7 @@ Redis server ✅ (still running)
 Redis runs as a separate service (Docker container or system service).
 
 
-// Email Notification Queue: 
+## Email Notification Queue: 
 User registers
    ↓
 User saved in DB
@@ -68,3 +68,20 @@ User → API → Queue.add()
          processJob()
                 ↓
          EmailService.send()
+
+
+## Create your first migration
+Option A – Empty migration (you write changes):
+$ npm run migration:create src/migrations/CreateUserTable
+Then open the new file and implement up and down (e.g. create/drop table to match User entity).
+Option B – Generate from entity (DB must exist and be empty or already in sync):
+Ensure DB is running and synchronize is false.
+Run:
+$ npm run migration:generate -- src/migrations/CreateUserTable
+TypeORM will compare your entities to the DB and generate a migration file. If the DB is already in sync with the entity, it might generate an empty or no migration.
+
+
+Run migrations
+$ npm run migration:run
+This runs all pending migrations. To undo the last one:
+$ npm run migration:revert

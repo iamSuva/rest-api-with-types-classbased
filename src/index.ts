@@ -12,6 +12,10 @@ const PORT = process.env.PORT || 5000;
 const startServer = async () => {
   try {
     await AppDataSource.initialize();
+    const runMigrations = await AppDataSource.runMigrations();
+    if (runMigrations.length > 0) {
+      logger.info(`Ran ${runMigrations.length} migration(s): ${runMigrations.map((m) => m.name).join(", ")}`);
+    }
     logger.info("********** Database connected **********");
 
     await connectRedis();
