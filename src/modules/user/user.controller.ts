@@ -37,7 +37,17 @@ export class UserController {
       const result = await this.userService.register(validatedData);
 
       // add job to email queue
-      await emailQueue.add("welcomeEmail", { email: result.email, name: result.email.split("@")[0] });
+      await emailQueue.add("welcomeEmail",
+        { email: result.email, name: result.email.split("@")[0] },
+        {
+          delay:5000,
+          attempts:3,
+          backoff:{
+            type:"exponential",
+            delay:1000,
+          },
+        }
+      );
       console.log("********** Job added to email queue **********");
       return ApiResponse.success(res, result, "User registered successfully", 201);
     } catch (error) {
